@@ -81,12 +81,12 @@ int main(int argc, char* argv[])
     }
 
     // Test code
-    sleep(2);
+    sleep(1);
 
     printf("Test start\n");
 
     send_ch = '0';
-    for (;;){
+/*    for (;;){
         write_port(fd, &send_ch, 1);
         send_ch++;
         if (send_ch > 0x7f) send_ch = '0';
@@ -98,6 +98,40 @@ int main(int argc, char* argv[])
 
         sleep(1);
     }
+*/
+    printf("Sending RESET\n");
+    unsigned char reset[5] = {0xd8, 0x55, 0xff, 0x55, 0xff};
+    write_port(fd, reset, sizeof(reset));
+    usleep(200000);
+    printf("Sending SYNC\n");
+    unsigned char sync[5] = {0xff, 0x55, 0xff, 0x55, 0xff};
+    write_port(fd, sync, sizeof(sync));
+    usleep(200000);
+    printf("Reading data now\n");
+    usleep(200000);
+    int cnt = 0;
+    for(;;){
+        unsigned char data[5];
+        tout.tv_sec = 0;
+        tout.tv_usec = 50;
+        int numRead = read_port(fd, data, sizeof(data), &tout);
+        
+        if(numRead > 0){
+            printf("Read[%d]: ", cnt++);
+            // print values:
+            for(int i = 0; i < sizeof(data); ++i){
+                printf("0x%02x", data[i]);
+                if(i < sizeof(data) - 1) {
+                    printf(",");
+                } else {
+                    printf("\n");
+                }
+            }
+        }
+
+        //usleep(50);
+    }
+    
 
     return 0;
 
